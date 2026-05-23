@@ -13,7 +13,7 @@ public class AutoAim {
     public static final double GOAL_Y = 36.0;
     public static final double TICKS_PER_DEGREE = 5.37; // Adjust to your specific motor/gearing
 
-    // --- PID COEFFICIENTS (Tune these in order: P, then D, then I) ---
+
     public static double kP = 0.035;
     public static double kI = 0.002;
     public static double kD = 0.0005;
