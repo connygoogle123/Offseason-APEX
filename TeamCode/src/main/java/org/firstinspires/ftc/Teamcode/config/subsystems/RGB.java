@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.config.subsystems;
+package org.firstinspires.ftc.Teamcode.config.subsystems;
 
 import com.qualcomm.robotcore.hardware.Servo;
 

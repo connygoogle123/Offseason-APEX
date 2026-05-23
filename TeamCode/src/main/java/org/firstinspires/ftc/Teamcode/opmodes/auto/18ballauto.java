@@ -1,11 +1,11 @@
-package org.firstinspires.ftc.teamcode.opmode;
+package org.firstinspires.ftc.Teamcode.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.util.Timer;
 import com.pedropathing.localization.Pose;
-import org.firstinspires.ftc.teamcode.pedroPathing.Close18Ball;
+import org.firstinspires.ftc.Teamcode.pedroPathing.Close18Ball;
 
 @Autonomous(name = "Decode 18 Ball Auto", group = "Autonomous")
 public class DecodeAuto extends OpMode {

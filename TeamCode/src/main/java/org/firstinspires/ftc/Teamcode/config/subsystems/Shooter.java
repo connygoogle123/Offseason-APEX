@@ -1,18 +1,15 @@
-package org.firstinspires.ftc.teamcode.config.subsystems;
+package org.firstinspires.ftc.Teamcode.config.subsystems;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.config.subsystems.RGB;
-
 public class Shooter {
-    public enum ShooterState { STILL, SPINNING_UP, READY, FEEDING }
+    public enum ShooterState { IDLE, SPINNING_UP, READY, FEEDING }
     
     private ShooterState state = ShooterState.IDLE;
     private final DcMotorEx flywheelLeft, flywheelRight;
