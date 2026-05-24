@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.Teamcode.config.subsystems;
+package org.firstinspires.ftc.teamcode.config.subsystems;
 
 public class TurretTable {
 

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.Teamcode.config.subsystems;
+package org.firstinspires.ftc.teamcode.config.subsystems;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-
 public class Intake {
     public enum IntakeState {
         INTAKE, STOP, REVERSE
