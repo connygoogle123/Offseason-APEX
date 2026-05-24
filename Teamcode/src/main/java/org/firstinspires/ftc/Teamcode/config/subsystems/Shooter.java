@@ -18,8 +18,6 @@ public class Shooter {
     private ShooterState state = ShooterState.IDLE;
     private final DcMotorEx flywheelMotorLeft;
     private final DcMotorEx flywheelMotorRight;
-    private final Servo gate;
-    private final RGB stateLight;
     private final ElapsedTime feedTimer = new ElapsedTime();
 
     // tune everything
@@ -36,8 +34,6 @@ public class Shooter {
     public Shooter(HardwareMap hardwareMap) {
         flywheelMotorLeft = hardwareMap.get(DcMotorEx.class, "flywheelLeft");
         flywheelMotorRight = hardwareMap.get(DcMotorEx.class, "flywheelRight");
-        gate = hardwareMap.get(Servo.class, "gate");
-        Servo rgbServo = hardwareMap.get(Servo.class, "rgb2");
 
         flywheelMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flywheelMotorRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -55,19 +51,6 @@ public class Shooter {
 
         flywheelMotorLeft.setDirection(DcMotorSimple.Direction.FORWARD);
         flywheelMotorRight.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        setPIDF(33.2, 13.1);
-        gate.setPosition(gateClosed);
-        stateLight = new RGB(rgbServo);
-    }
-
-    public void setPIDF(double p, double f) {
-        P = p;
-        F = f;
-
-        PIDFCoefficients pidf = new PIDFCoefficients(P, 0, 0, F);
-        flywheelMotorLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
-        flywheelMotorRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
     }
 
     public void setTargetVelocity(double targetVelocity) {
@@ -82,7 +65,6 @@ public class Shooter {
     }
     public void requestFeed() {
         if (state == ShooterState.READY) {
-            gate.setPosition(gateOpen);
             feedTimer.reset();
             state = ShooterState.FEEDING;
         }
@@ -92,15 +74,11 @@ public class Shooter {
             case IDLE:
                 flywheelMotorLeft.setPower(0);
                 flywheelMotorRight.setPower(0);
-                gate.setPosition(gateClosed);
-                stateLight.blue();
                 break;
 
             case SPINNING_UP:
                 flywheelMotorLeft.setVelocity(targetVelocity);
                 flywheelMotorRight.setVelocity(targetVelocity);
-                gate.setPosition(gateClosed);
-                stateLight.azure();
 
                 if (atSpeed()) {
                     state = ShooterState.READY;
@@ -110,8 +88,6 @@ public class Shooter {
             case READY:
                 flywheelMotorLeft.setVelocity(targetVelocity);
                 flywheelMotorRight.setVelocity(targetVelocity);
-                gate.setPosition(gateClosed);
-                stateLight.green();
 
                 // if speed drops, go back to spinning up
                 if (!atSpeed()) {
@@ -122,11 +98,8 @@ public class Shooter {
             case FEEDING:
                 flywheelMotorLeft.setVelocity(targetVelocity);
                 flywheelMotorRight.setVelocity(targetVelocity);
-                gate.setPosition(gateOpen);
-                stateLight.orange();
 
                 if (feedTimer.seconds() >= feedTime) {
-                    gate.setPosition(gateClosed);
 
                     if (atSpeed()) {
                         state = ShooterState.READY;
