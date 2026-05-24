@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.config.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.config.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.config.subsystems.Shooter;
-import org.firstinspires.ftc.teamcode.config.subsystems.AutoAim
+import org.firstinspires.ftc.teamcode.config.subsystems.AutoAim;
 @TeleOp (name = "MainTeleOp", group = "TeleOp")
 public class Tele extends LinearOpMode {
 
