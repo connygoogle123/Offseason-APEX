@@ -13,6 +13,12 @@ public class TurretTable {
             this.f = f;
             this.velocity = velocity;
 
+
         }
     }
+
+public TurretTable (){
+
+}
+
 }
