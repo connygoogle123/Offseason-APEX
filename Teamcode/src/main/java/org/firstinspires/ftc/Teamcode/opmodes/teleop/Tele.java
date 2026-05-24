@@ -23,7 +23,7 @@ public class Tele extends LinearOpMode {
         while (opModeIsActive()) {
 
 
-            if (gamepad2.left_trigger > 0.2) {
+            if (gamepad2.left_trigger > 0.25) {
                 intake.intake();
 
             } else if (gamepad2.left_bumper) {
