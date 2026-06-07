@@ -8,11 +8,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+
 public class Turret {
     // components
+
     public final DcMotorEx turret;
 
-    public static final double FIELD_START_OFFSET = 45.0;
+    public static final double FIELD_START_OFFSET = -150.0;
     public final com.qualcomm.hardware.gobilda.GoBildaPinpointDriver pinpoint;
 
     private final ElapsedTime aimTimer = new ElapsedTime();
