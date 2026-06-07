@@ -11,6 +11,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class Turret {
     // components
     public final DcMotorEx turret;
+
+    public static final double FIELD_START_OFFSET = 45.0;
     public final com.qualcomm.hardware.gobilda.GoBildaPinpointDriver pinpoint;
 
     private final ElapsedTime aimTimer = new ElapsedTime();
@@ -97,9 +99,9 @@ public class Turret {
         // Target angle execution
         double targetLocalDeg;
         if (INVERT_CHASSIS_TRACKING) {
-            targetLocalDeg = robotHeadingDeg;
+            targetLocalDeg = robotHeadingDeg + FIELD_START_OFFSET;
         } else {
-            targetLocalDeg = -robotHeadingDeg;
+            targetLocalDeg = -robotHeadingDeg + FIELD_START_OFFSET;
         }
 
         // Bound targets to physical safety travel limits
