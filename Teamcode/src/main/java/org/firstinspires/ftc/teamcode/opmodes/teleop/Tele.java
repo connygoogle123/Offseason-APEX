@@ -1,89 +1,102 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.config.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.config.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.config.subsystems.Shooter;
-import org.firstinspires.ftc.teamcode.config.subsystems.AutoAim;
-@TeleOp (name = "MainTeleOp", group = "TeleOp")
+import org.firstinspires.ftc.teamcode.config.subsystems.Turret;
+
+@TeleOp(name = "Main TeleOp", group = "Linear OpMode")
 public class Tele extends LinearOpMode {
 
+    // subs
     private Drivetrain drivetrain;
     private Intake intake;
-    private Shooter shooter;
+    private Turret turret;
 
-    // --- TOGGLE STATE MEMORY FOR AUTO AIM ---
-    private boolean lastRightBumperState = false;
+    private final ElapsedTime loopTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
+        // --- INITIALIZATION ---
+        telemetry.addData("Status", "Initializing Subsystems...");
+        telemetry.update();
+
         drivetrain = new Drivetrain(hardwareMap);
         intake = new Intake(hardwareMap);
-        shooter = new Shooter(hardwareMap);
+        turret = new Turret(hardwareMap);
+
+        // Turn on turret tracking from start
+        turret.setAutoAimEnabled(true);
+
+        telemetry.addData("Status", "Initialized! Ready to Start.");
+        telemetry.update();
 
         waitForStart();
+        loopTimer.reset();
+
+        // main teleop
         while (opModeIsActive()) {
+            double loopTimeMs = loopTimer.milliseconds();
+            loopTimer.reset();
 
-            // Variables that continuously change
-            double forward, right, rotate;
-            forward = -gamepad1.left_stick_y;
-            right = gamepad1.left_stick_x;
-            rotate  =  gamepad1.right_stick_x;
+            double forward = -gamepad1.left_stick_y;
+            double strafe  = gamepad1.left_stick_x;
+            double rotate  = gamepad1.right_stick_x;
 
-            drivetrain.drive(forward, right, rotate);
-
-            // --- AUTO AIM TOGGLE LOGIC ---
-            // Drivers click Right Bumper on Gamepad 1 once to flip the tracking loop on/off
-            if (gamepad1.right_bumper && !lastRightBumperState) {
-                shooter.setAutoAimEnabled(!shooter.isAutoAimEnabled());
+            // Optional precision speed toggle (Hold Right Bumper for slow mode)
+            if (gamepad1.right_bumper) {
+                drivetrain.setDriveSpeedMultiplier(0.40);
+            } else {
+                drivetrain.setDriveSpeedMultiplier(1.00);
             }
-            lastRightBumperState = gamepad1.right_bumper; // Save button state for next loop iteration
+
+            drivetrain.drive(forward, strafe, rotate);
 
 
-            if (gamepad2.left_trigger > 0.2) {
+            if (gamepad1.right_trigger > 0.1) {
                 intake.intake();
-                shooter.gate.setPosition(shooter.gateClosed);
-            } else if (gamepad2.left_bumper) {
+            } else if (gamepad1.left_trigger > 0.1) {
                 intake.reverse();
             } else {
                 intake.stop();
             }
 
-            if (gamepad2.x) {
-                shooter.requestSpinUp(2000);
-            }
-            if (gamepad2.right_bumper) {
-                shooter.requestFeed();
-            }
-            if (gamepad2.a) {
-                shooter.requestStop();
-            }
-
-            // This line executes the flywheel control, servo logic, AND the auto-aim PID math
-            shooter.update();
-
-            if (shooter.getState() == Shooter.ShooterState.FEEDING) {
-                intake.intake();
-            }
-
+            // Execute intake voltage outputs
             intake.update();
-            intake.updateLight();
 
-            // --- TELEMETRY ---
-            telemetry.addData("Intake State: ", intake.getState());
-            telemetry.addData("Current Amps: ", intake.getCurrent());
-            telemetry.addData("Estimated Balls: ", intake.getBallCount());
 
-            telemetry.addData("Auto-Aim Tracking: ", shooter.isAutoAimEnabled() ? "ON [LOCK]" : "OFF");
-            telemetry.addData("State", shooter.getState());
-            telemetry.addData("Left Velocity", shooter.getLeftVelocity());
-            telemetry.addData("Right Velocity", shooter.getRightVelocity());
-            telemetry.addData("Target Velocity: ", shooter.getTargetVelocity());
-            telemetry.addData("Current Velocity (AV)", "%.2f", shooter.getAverageVelocity());
-            telemetry.addData("Error", "%.2f", shooter.getTargetVelocity() - shooter.getAverageVelocity());
+            if (gamepad1.y) {
+                turret.setAutoAimEnabled(true);
+            } else if (gamepad2.x) {
+                turret.setAutoAimEnabled(false);
+            }
+
+            // pinpoint stuff
+            turret.update();
+
+            // ==========================================
+            // 4. TELEMETRY DIAGNOSTICS
+            // ==========================================
+            telemetry.addData("--- SYSTEM DIAGNOSTICS ---", "");
+            telemetry.addData("Loop Speed (Hz)", "%.1f Hz", (1000.0 / loopTimeMs));
+
+            telemetry.addData("--- INTAKE STATS ---", "");
+            telemetry.addData("Intake Current (Amps)", "%.2f A", intake.getCurrent());
+            telemetry.addData("Balls Inside", "%d / 3", intake.getBallCount());
+            telemetry.addData("State", intake.getState());
+
+            telemetry.addData("--- TURRET STATS ---", "");
+            telemetry.addData("Auto-Aim Status", turret.isAutoAimEnabled() ? "ACTIVE" : "DISABLED");
+            telemetry.addData("Encoder Reading (Pos)", turret.turret.getCurrentPosition());
+
             telemetry.update();
         }
+
+        // stop
+        drivetrain.stop();
+        intake.stop();
+        turret.setAutoAimEnabled(false);
     }
 }
