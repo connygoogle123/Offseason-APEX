@@ -14,7 +14,6 @@ public class Turret {
 
     public final DcMotorEx turret;
 
-    public static final double FIELD_START_OFFSET = -150.0;
     public final com.qualcomm.hardware.gobilda.GoBildaPinpointDriver pinpoint;
 
     private final ElapsedTime aimTimer = new ElapsedTime();
@@ -101,9 +100,9 @@ public class Turret {
         // Target angle execution
         double targetLocalDeg;
         if (INVERT_CHASSIS_TRACKING) {
-            targetLocalDeg = robotHeadingDeg + FIELD_START_OFFSET;
+            targetLocalDeg = robotHeadingDeg;
         } else {
-            targetLocalDeg = -robotHeadingDeg + FIELD_START_OFFSET;
+            targetLocalDeg = -robotHeadingDeg;
         }
 
         // Bound targets to physical safety travel limits

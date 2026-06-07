@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -6,14 +7,15 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.config.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.config.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.config.subsystems.Turret;
+import org.firstinspires.ftc.teamcode.config.subsystems.Shooter;
 
-@TeleOp(name = "Main TeleOp", group = "Linear OpMode")
+@TeleOp(name = "Main TeleOp: With Shooter", group = "Linear OpMode")
 public class Tele extends LinearOpMode {
 
-    // subs
     private Drivetrain drivetrain;
     private Intake intake;
     private Turret turret;
+    private Shooter shooter;
 
     private final ElapsedTime loopTimer = new ElapsedTime();
 
@@ -26,8 +28,8 @@ public class Tele extends LinearOpMode {
         drivetrain = new Drivetrain(hardwareMap);
         intake = new Intake(hardwareMap);
         turret = new Turret(hardwareMap);
+        shooter = new Shooter(hardwareMap);
 
-        // Turn on turret tracking from start
         turret.setAutoAimEnabled(true);
 
         telemetry.addData("Status", "Initialized! Ready to Start.");
@@ -36,67 +38,91 @@ public class Tele extends LinearOpMode {
         waitForStart();
         loopTimer.reset();
 
-        // main teleop
+        // --- MAIN TELEOP LOOP ---
         while (opModeIsActive()) {
             double loopTimeMs = loopTimer.milliseconds();
             loopTimer.reset();
 
-            double forward = gamepad1.left_stick_y;
-            double strafe  = gamepad1.left_stick_x;
-            double rotate  = gamepad1.right_stick_x;
+            // ==========================================
+            // 1. DRIVETRAIN CONTROLS (Gamepad 1)
+            // ==========================================
+            double forward = gamepad2.left_stick_y;
+            double strafe  = gamepad2.left_stick_x;
+            double rotate  = gamepad2.right_stick_x;
 
-            // Optional precision speed toggle (Hold Right Bumper for slow mode)
-            if (gamepad1.right_bumper) {
-                drivetrain.setDriveSpeedMultiplier(0.40);
-            } else {
+            if (gamepad2.right_bumper) {
                 drivetrain.setDriveSpeedMultiplier(1.00);
+            } else {
+                drivetrain.setDriveSpeedMultiplier(0.40);
             }
 
             drivetrain.drive(forward, strafe, rotate);
 
-
-            if (gamepad1.right_trigger > 0.1) {
+            // ==========================================
+            // 2. INTAKE CONTROLS (Gamepad 2)
+            // ==========================================
+            if (gamepad2.right_trigger > 0.1) {
                 intake.intake();
-            } else if (gamepad1.left_trigger > 0.1) {
+            } else if (gamepad2.left_trigger > 0.1) {
                 intake.reverse();
             } else {
                 intake.stop();
             }
-
-            // Execute intake voltage outputs
             intake.update();
 
+            // ==========================================
+            // 3. SHOOTER CONTROLS (Gamepad 2)
+            // ==========================================
+            // Press A to spin up and dynamically aim using distance calculated by tracking
+            if (gamepad2.a) {
 
-            if (gamepad1.y) {
+                shooter.aimForDistance(72.0);
+                shooter.requestSpinUp(shooter.getTargetVelocity());
+            }
+            // Press B to shut down flywheels
+            else if (gamepad2.b) {
+                shooter.requestStop();
+            }
+
+            // Press Right Bumper to fire once flywheels are READY
+            if (gamepad2.right_bumper) {
+                shooter.requestFeed();
+            }
+
+            // If shooter is actively feeding, override intake to help transfer elements
+            if (shooter.shouldRunTransfer()) {
+                intake.intake();
+            }
+
+            shooter.update();
+
+            // ==========================================
+            // 4. TURRET BACKGROUND TASKS
+            // ==========================================
+            if (gamepad2.y) {
                 turret.setAutoAimEnabled(true);
             } else if (gamepad2.x) {
                 turret.setAutoAimEnabled(false);
             }
-
-            // pinpoint stuff
             turret.update();
 
             // ==========================================
-            // 4. TELEMETRY DIAGNOSTICS
+            // 5. DIAGNOSTICS TELEMETRY
             // ==========================================
-            telemetry.addData("--- SYSTEM DIAGNOSTICS ---", "");
-            telemetry.addData("Loop Speed (Hz)", "%.1f Hz", (1000.0 / loopTimeMs));
+            telemetry.addData("Loop Speed (Hz)", (loopTimeMs > 0) ? "%.1f Hz" : "0.0 Hz", (1000.0 / loopTimeMs));
 
-            telemetry.addData("--- INTAKE STATS ---", "");
-            telemetry.addData("Intake Current (Amps)", "%.2f A", intake.getCurrent());
-            telemetry.addData("Balls Inside", "%d / 3", intake.getBallCount());
-            telemetry.addData("State", intake.getState());
-
-            telemetry.addData("--- TURRET STATS ---", "");
-            telemetry.addData("Auto-Aim Status", turret.isAutoAimEnabled() ? "ACTIVE" : "DISABLED");
-            telemetry.addData("Encoder Reading (Pos)", turret.turret.getCurrentPosition());
+            telemetry.addData("--- SHOOTER ---", "");
+            telemetry.addData("State", shooter.getState());
+            telemetry.addData("Target Velocity", "%.1f", shooter.getTargetVelocity());
+            telemetry.addData("Current Velocity", "%.1f", shooter.getAverageVelocity());
+            telemetry.addData("At Speed?", shooter.atSpeed() ? "READY" : "SPINNING UP");
 
             telemetry.update();
         }
 
-        // stop
         drivetrain.stop();
         intake.stop();
         turret.setAutoAimEnabled(false);
+        shooter.requestStop();
     }
 }
