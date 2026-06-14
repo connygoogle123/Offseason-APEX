@@ -21,7 +21,7 @@ public class Tele extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        // --- INITIALIZATION ---
+        // Init
         telemetry.addData("Status", "Initializing Subsystems...");
         telemetry.update();
 
@@ -38,14 +38,12 @@ public class Tele extends LinearOpMode {
         waitForStart();
         loopTimer.reset();
 
-        // --- MAIN TELEOP LOOP ---
+        // Main Teleop
         while (opModeIsActive()) {
             double loopTimeMs = loopTimer.milliseconds();
             loopTimer.reset();
 
-            // ==========================================
-            // 1. DRIVETRAIN CONTROLS (Gamepad 1)
-            // ==========================================
+            //dirvetrain stuff
             double forward = gamepad1.left_stick_y;
             double strafe  = gamepad1.left_stick_x;
             double rotate  = gamepad1.right_stick_x;
@@ -58,9 +56,8 @@ public class Tele extends LinearOpMode {
 
             drivetrain.drive(forward, strafe, rotate);
 
-            // ==========================================
-            // 2. INTAKE CONTROLS (Gamepad 2)
-            // ==========================================
+            // Intake
+
             if (gamepad2.right_trigger > 0.1) {
                 intake.intake();
             } else if (gamepad2.left_trigger > 0.1) {
@@ -70,10 +67,8 @@ public class Tele extends LinearOpMode {
             }
             intake.update();
 
-            // ==========================================
-            // 3. SHOOTER CONTROLS (Gamepad 2)
-            // ==========================================
-            // Press A to spin up and dynamically aim using distance calculated by tracking
+            // Shooter, currently not working
+            // Press A to spin up
             if (gamepad2.a) {
 
                 shooter.aimForDistance(102.0);
@@ -84,21 +79,19 @@ public class Tele extends LinearOpMode {
                 shooter.requestStop();
             }
 
-            // Press Right Bumper to fire once flywheels are READY
+            // Press Right bumper to fire once flywheels ready
             if (gamepad2.right_bumper) {
                 shooter.requestFeed();
             }
 
-            // If shooter is actively feeding, override intake to help transfer elements
+            // shooter override, never tested before
             if (shooter.shouldRunTransfer()) {
                 intake.intake();
             }
 
             shooter.update();
 
-            // ==========================================
-            // 4. TURRET BACKGROUND TASKS
-            // ==========================================
+            // turret background calculations
             if (gamepad2.y) {
                 turret.setAutoAimEnabled(true);
             } else if (gamepad2.x) {
@@ -106,9 +99,8 @@ public class Tele extends LinearOpMode {
             }
             turret.update();
 
-            // ==========================================
-            // 5. DIAGNOSTICS TELEMETRY
-            // ==========================================
+            // telemetry
+
             telemetry.addData("Loop Speed (Hz)", (loopTimeMs > 0) ? "%.1f Hz" : "0.0 Hz", (1000.0 / loopTimeMs));
 
             telemetry.addData("--- SHOOTER ---", "");
