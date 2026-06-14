@@ -46,14 +46,14 @@ public class Tele extends LinearOpMode {
             // ==========================================
             // 1. DRIVETRAIN CONTROLS (Gamepad 1)
             // ==========================================
-            double forward = gamepad2.left_stick_y;
-            double strafe  = gamepad2.left_stick_x;
-            double rotate  = gamepad2.right_stick_x;
+            double forward = gamepad1.left_stick_y;
+            double strafe  = gamepad1.left_stick_x;
+            double rotate  = gamepad1.right_stick_x;
 
             if (gamepad2.right_bumper) {
                 drivetrain.setDriveSpeedMultiplier(1.00);
             } else {
-                drivetrain.setDriveSpeedMultiplier(0.40);
+                drivetrain.setDriveSpeedMultiplier(0.70);
             }
 
             drivetrain.drive(forward, strafe, rotate);
@@ -76,7 +76,7 @@ public class Tele extends LinearOpMode {
             // Press A to spin up and dynamically aim using distance calculated by tracking
             if (gamepad2.a) {
 
-                shooter.aimForDistance(72.0);
+                shooter.aimForDistance(102.0);
                 shooter.requestSpinUp(shooter.getTargetVelocity());
             }
             // Press B to shut down flywheels
