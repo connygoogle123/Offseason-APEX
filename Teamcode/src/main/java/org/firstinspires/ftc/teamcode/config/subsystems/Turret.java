@@ -20,7 +20,7 @@ public class Turret {
     private boolean autoAimEnabled = false;
 
     // hardware constants
-    public static final double TURRET_TICKS_PER_DEGREE = 3.86; // good and accurate
+    public static final double TURRET_TICKS_PER_DEGREE = 3.845; // good and accurate
     public static final double MAX_TURRET_DEG = 135.0;
     public static final double MIN_TURRET_DEG = -135.0;
 
