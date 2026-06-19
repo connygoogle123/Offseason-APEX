@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+
 public class Shooter {
     public enum ShooterState {
         IDLE, SPINNING_UP, READY, FEEDING
@@ -21,13 +22,13 @@ public class Shooter {
     private final RGB stateLight;
     private final ElapsedTime feedTimer = new ElapsedTime();
 
-
     private double targetVelocity = 0;
     private double velocityTolerance = 50;
 
+    // Adjust these values if the gate physical clears or interferes!
     public double gateClosed = 0.0;
-    public double gateOpen = 0.5;
-    private double feedTime = 1.0;
+    public double gateOpen = 0.65;     // Increased slightly from 0.5 to clear interference
+    private double feedTime = 1.5;     // Increased from 1.0s to give the ball plenty of time to clear
     private double gateOpenDelay = 0.25;
 
     private double P = 0;
@@ -37,6 +38,8 @@ public class Shooter {
         flywheelMotorLeft = hardwareMap.get(DcMotorEx.class, "flywheelLeft");
         flywheelMotorRight = hardwareMap.get(DcMotorEx.class, "flywheelRight");
         hoodServo = hardwareMap.get(Servo.class, "hood");
+        hoodServo.setDirection(Servo.Direction.REVERSE);
+
         gate = hardwareMap.get(Servo.class, "gate");
         Servo rgbServo = hardwareMap.get(Servo.class, "rgb2");
 
@@ -65,7 +68,6 @@ public class Shooter {
     public void setPIDF(double p, double f) {
         P = p;
         F = f;
-
         PIDFCoefficients pidf = new PIDFCoefficients(P, 0, 0, F);
         flywheelMotorLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         flywheelMotorRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
@@ -73,6 +75,11 @@ public class Shooter {
 
     public void setTargetVelocity(double targetVelocity) {
         this.targetVelocity = targetVelocity;
+    }
+
+    // Direct manual servo assignment for the tester script
+    public void setManualHoodPosition(double position) {
+        hoodServo.setPosition(position);
     }
 
     public void requestSpinUp(double velocity) {
@@ -115,7 +122,6 @@ public class Shooter {
                 gate.setPosition(gateClosed);
                 stateLight.green();
 
-                // if speed drops, go back to spinning up
                 if (!atSpeed()) {
                     state = ShooterState.SPINNING_UP;
                 }
@@ -148,51 +154,24 @@ public class Shooter {
         return Math.abs(targetVelocity - getAverageVelocity()) <= velocityTolerance;
     }
 
-    public double getLeftVelocity() {
-        return flywheelMotorLeft.getVelocity();
-    }
-
-    public double getRightVelocity() {
-        return flywheelMotorRight.getVelocity();
-    }
-
+    public double getLeftVelocity() { return flywheelMotorLeft.getVelocity(); }
+    public double getRightVelocity() { return flywheelMotorRight.getVelocity(); }
     public double getAverageVelocity() {
         return (Math.abs(getLeftVelocity()) + Math.abs(getRightVelocity())) / 2.0;
     }
+    public double getTargetVelocity() { return targetVelocity; }
+    public ShooterState getState() { return state; }
 
-    public double getTargetVelocity() {
-        return targetVelocity;
-    }
-
-    public ShooterState getState() {
-        return state;
-    }
-
-    public double getFlywheelSpeed(double distance) {
-        return 0.0000602816 * Math.pow(distance, 4)
-                - 0.0149498 * Math.pow(distance, 3)
-                + 1.34549 * Math.pow(distance, 2)
-                - 44.93056 * distance
-                + 1750;
-    }
-
-    public double getHoodAngle(double distance) {
-        return 1.80845e-7 * Math.pow(distance, 4)
-                - 0.000038098 * Math.pow(distance, 3)
-                + 0.00299479 * Math.pow(distance, 2)
-                - 0.105764 * distance
-                + 1.55;
+    public double getHoodPosition() {
+        return hoodServo.getPosition();
     }
 
     public void aimForDistance(double distance) {
+        double velocity = org.firstinspires.ftc.teamcode.config.tests.shootertest.getSpeed(distance);
+        double hoodPos = org.firstinspires.ftc.teamcode.config.tests.shootertest.getAngle(distance);
 
-        double velocity = getFlywheelSpeed(distance);
-        double hoodPos = getHoodAngle(distance);
-
-        // clamp between 1200 and 2500
         velocity = Math.max(1200, Math.min(2500, velocity));
-        // clamp between 0.27 and 0.9
-        hoodPos = Math.max(0.27, Math.min(0.9, hoodPos));
+        hoodPos = Math.max(0.0, Math.min(1.0, hoodPos)); // Expanded constraints to match true servo range
 
         setTargetVelocity(velocity);
         hoodServo.setPosition(hoodPos);
