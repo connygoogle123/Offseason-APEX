@@ -23,7 +23,7 @@ public class Intake {
     public Intake(HardwareMap hardwareMap) {
         intake = hardwareMap.get(DcMotorEx.class, "intake");
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        intake.setDirection(DcMotor.Direction.REVERSE);
+        intake.setDirection(DcMotor.Direction.FORWARD);
 
         Servo rgbServo = hardwareMap.get(Servo.class, "rgb1");
         ballLight = new RGB(rgbServo);
