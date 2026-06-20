@@ -25,28 +25,28 @@ public class shootertest {
         // Measured tuning data points (Mapped to Desmos coords)
         // Adjust the '0' values to your baseline angle once found!
         angleILUT.add(40, 0);
-        speedILUT.add(40, 1330);
+        speedILUT.add(40, 1280);
 
         angleILUT.add(50, 0);
-        speedILUT.add(50, 1430);
+        speedILUT.add(50, 1380);
 
         angleILUT.add(60, 0);
-        speedILUT.add(60, 1590);
+        speedILUT.add(60, 1500);
 
         angleILUT.add(70, 0);
-        speedILUT.add(70, 1635);
+        speedILUT.add(70, 1600);
 
         angleILUT.add(75, 28);
-        speedILUT.add(75, 1640);
+        speedILUT.add(75, 1620);
 
         angleILUT.add(80, 31.5);
-        speedILUT.add(80, 1640);
+        speedILUT.add(80, 1630);
 
         angleILUT.add(90, 35);
-        speedILUT.add(90, 1730);
+        speedILUT.add(90, 1700);
 
         angleILUT.add(100, 34);
-        speedILUT.add(100, 1830);
+        speedILUT.add(100, 1800);
 
         angleILUT.add(150, 46);
         speedILUT.add(150, 2230);

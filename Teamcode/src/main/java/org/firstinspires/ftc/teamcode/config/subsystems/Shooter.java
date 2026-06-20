@@ -109,7 +109,7 @@ public class Shooter {
     public void aimForDistance(double distance) {
         double velocity = org.firstinspires.ftc.teamcode.config.tests.shootertest.getSpeed(distance);
 
-        velocity *= 1.05;
+        velocity *=0.8;
 
         double hoodDegrees = org.firstinspires.ftc.teamcode.config.tests.shootertest.getAngle(distance);
 

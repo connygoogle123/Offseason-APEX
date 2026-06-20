@@ -27,8 +27,8 @@ public class Turret {
     public static final boolean INVERT_CHASSIS_TRACKING = false;
 
     // --- TUNED SMOOTH PID PARAMETERS ---
-    public double turret_kP = 0.012;
-    public double turret_kI = 0.000;
+    public double turret_kP = 0.015;
+    public double turret_kI = 0.001;
     public double turret_kD = 0.004; // Gentle shock absorber to catch overshoot
     public double turret_kF = 0.000; // Left at zero to prevent runaways
 
