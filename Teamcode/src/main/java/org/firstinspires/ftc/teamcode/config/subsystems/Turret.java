@@ -136,7 +136,7 @@ public class Turret {
         }
 
         // --- POWER LIMIT COMFORTABLY SET TO 30% ---
-        double finalPower = Math.max(-0.30, Math.min(0.30, totalPower));
+        double finalPower = Math.max(-0.60, Math.min(0.60, totalPower));
         turret.setPower(finalPower);
     }
 
