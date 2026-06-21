@@ -20,7 +20,7 @@ public class Turret {
     private boolean autoAimEnabled = false;
 
     // hardware constants
-    public static final double TURRET_TICKS_PER_DEGREE = 3.845; // good and accurate
+    public static final double TURRET_TICKS_PER_DEGREE = 3.745; // good and accurate
     public static final double MAX_TURRET_DEG = 135.0;
     public static final double MIN_TURRET_DEG = -135.0;
 
@@ -28,8 +28,8 @@ public class Turret {
 
     // --- TUNED SMOOTH PID PARAMETERS ---
     public double turret_kP = 0.015;
-    public double turret_kI = 0.001;
-    public double turret_kD = 0.004; // Gentle shock absorber to catch overshoot
+    public double turret_kI = 0.000;
+    public double turret_kD = 0.007; // Gentle shock absorber to catch overshoot
     public double turret_kF = 0.000; // Left at zero to prevent runaways
 
     private double lastTurretError = 0;
@@ -111,8 +111,7 @@ public class Turret {
         // Read local physical encoder position
         double localTurretDeg = turret.getCurrentPosition() / TURRET_TICKS_PER_DEGREE;
 
-        // --- FIXED 90-DEGREE STRAP WITH MULTIPLIER SCALING ---
-        double error = (targetLocalDeg * 0.95) - localTurretDeg;
+        double error = targetLocalDeg - localTurretDeg;
 
         while (error > 180) error -= 360;
         while (error < -180) error += 360;
@@ -128,15 +127,28 @@ public class Turret {
 
         double totalPower = pTerm + iTerm + dTerm;
 
-        // --- DYNAMIC DEADBAND TO CATCH LARGE TURN MOMENTUM ---
-        double dynamicDeadband = (Math.abs(targetLocalDeg) > 60) ? 4.0 : 2.0;
-        if (Math.abs(error) < dynamicDeadband) {
+        if (Math.abs(error) < 1.2) {
             turret.setPower(0);
             return;
         }
 
-        // --- POWER LIMIT COMFORTABLY SET TO 30% ---
+        // --- MAX POWER PART WITH SLEW RATE ACCELERATION WINDOW ---
+        double currentPower = turret.getPower();
         double finalPower = Math.max(-0.60, Math.min(0.60, totalPower));
+
+        // --- FIXED: MOMENTUM ANTICIPATION SCALE ---
+        // If the turret is moving quickly toward the target, ease off early to prevent over-turning
+        if (Math.abs(error) < 5.0 && Math.abs(dTerm) > 0.02) {
+            finalPower *= 0.75; // Dampens final approach power by 25% right before stopping
+        }
+
+        double maxPowerChange = 0.08;
+        if (finalPower - currentPower > maxPowerChange) {
+            finalPower = currentPower + maxPowerChange;
+        } else if (currentPower - finalPower > maxPowerChange) {
+            finalPower = currentPower - maxPowerChange;
+        }
+
         turret.setPower(finalPower);
     }
 
