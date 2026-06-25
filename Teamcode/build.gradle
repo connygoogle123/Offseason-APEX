@@ -40,7 +40,7 @@ repositories {
 
     // For Snapshot/Beta Versions of SolversLib
     maven {
-        url "https://repo.dairy.foundation/snapshots"
+        url = "https://repo.dairy.foundation/snapshots"
     }
 }
 

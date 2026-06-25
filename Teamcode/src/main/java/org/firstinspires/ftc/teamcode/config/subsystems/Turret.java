@@ -11,26 +11,26 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Turret {
     // components
-
     public final DcMotorEx turret;
-
     public final com.qualcomm.hardware.gobilda.GoBildaPinpointDriver pinpoint;
 
     private final ElapsedTime aimTimer = new ElapsedTime();
     private boolean autoAimEnabled = false;
 
     // hardware constants
-    public static final double TURRET_TICKS_PER_DEGREE = 3.745; // good and accurate
+    public static final double TURRET_TICKS_PER_DEGREE = 3.736;
     public static final double MAX_TURRET_DEG = 135.0;
     public static final double MIN_TURRET_DEG = -135.0;
 
+    // --- ORIENTATION CONFIGURATION ---
     public static final boolean INVERT_CHASSIS_TRACKING = false;
+    public static final boolean INVERT_TURRET_MOTOR_DIRECTION = false;
 
     // --- TUNED SMOOTH PID PARAMETERS ---
     public double turret_kP = 0.015;
     public double turret_kI = 0.000;
-    public double turret_kD = 0.007; // Gentle shock absorber to catch overshoot
-    public double turret_kF = 0.000; // Left at zero to prevent runaways
+    public double turret_kD = 0.007;
+    public double turret_kF = 0.000;
 
     private double lastTurretError = 0;
     private double turretIntegralSum = 0;
@@ -41,8 +41,11 @@ public class Turret {
 
         configurePinpointHardware();
 
-        // Standardized direction control
-        turret.setDirection(DcMotorEx.Direction.FORWARD);
+        if (INVERT_TURRET_MOTOR_DIRECTION) {
+            turret.setDirection(DcMotorEx.Direction.REVERSE);
+        } else {
+            turret.setDirection(DcMotorEx.Direction.FORWARD);
+        }
 
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -94,10 +97,9 @@ public class Turret {
         aimTimer.reset();
         if (dt <= 0 || dt > 0.2) dt = 0.02;
 
-        // Pull active heading directly from the Pinpoint gyro chip
+
         double robotHeadingDeg = pinpoint.getHeading(AngleUnit.DEGREES);
 
-        // Target angle execution
         double targetLocalDeg;
         if (INVERT_CHASSIS_TRACKING) {
             targetLocalDeg = robotHeadingDeg;
@@ -105,10 +107,11 @@ public class Turret {
             targetLocalDeg = -robotHeadingDeg;
         }
 
-        // Bound targets to physical safety travel limits
+        while (targetLocalDeg > 180) targetLocalDeg -= 360;
+        while (targetLocalDeg < -180) targetLocalDeg += 360;
+
         targetLocalDeg = Math.max(MIN_TURRET_DEG, Math.min(MAX_TURRET_DEG, targetLocalDeg));
 
-        // Read local physical encoder position
         double localTurretDeg = turret.getCurrentPosition() / TURRET_TICKS_PER_DEGREE;
 
         double error = targetLocalDeg - localTurretDeg;
@@ -116,7 +119,7 @@ public class Turret {
         while (error > 180) error -= 360;
         while (error < -180) error += 360;
 
-        // PID calculations
+        // PID
         double pTerm = turret_kP * error;
 
         turretIntegralSum += error * dt;
@@ -127,22 +130,35 @@ public class Turret {
 
         double totalPower = pTerm + iTerm + dTerm;
 
-        if (Math.abs(error) < 1.2) {
+        if (Math.abs(error) < 1.5) {
             turret.setPower(0);
             return;
         }
 
-        // --- MAX POWER PART WITH SLEW RATE ACCELERATION WINDOW ---
-        double currentPower = turret.getPower();
-        double finalPower = Math.max(-0.60, Math.min(0.60, totalPower));
+// assymetric clamping
+        double finalPower = totalPower;
+        if (finalPower < 0) {
 
-        // --- FIXED: MOMENTUM ANTICIPATION SCALE ---
-        // If the turret is moving quickly toward the target, ease off early to prevent over-turning
-        if (Math.abs(error) < 5.0 && Math.abs(dTerm) > 0.02) {
-            finalPower *= 0.75; // Dampens final approach power by 25% right before stopping
+            finalPower = Math.max(-0.50, finalPower);
+        } else {
+
+            finalPower = Math.min(0.4, finalPower);
         }
 
-        double maxPowerChange = 0.08;
+        // added different powers for turret direction to even out gear mesh
+        if (Math.abs(error) < 5.0 && Math.abs(dTerm) > 0.02) {
+            if (error > 0) {
+
+                finalPower *= 0.60;
+            } else {
+                // standard dampening (25% power cut)
+                finalPower *= 0.75;
+            }
+        }
+
+        // Slew rate
+        double currentPower = turret.getPower();
+        double maxPowerChange = 0.06;
         if (finalPower - currentPower > maxPowerChange) {
             finalPower = currentPower + maxPowerChange;
         } else if (currentPower - finalPower > maxPowerChange) {
